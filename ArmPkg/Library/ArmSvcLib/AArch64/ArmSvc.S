@@ -36,6 +36,8 @@ ASM_PFX(ArmCallSvc):
   // A SVC call can return up to 4 values - we do not need to store back x4-x7.
   stp   x0, x1, [x9, #0]
   stp   x2, x3, [x9, #16]
+  stp   x4, x5, [x9, #32]
+  stp   x6, x7, [x9, #48]
 
   mov   x0, x9
 
