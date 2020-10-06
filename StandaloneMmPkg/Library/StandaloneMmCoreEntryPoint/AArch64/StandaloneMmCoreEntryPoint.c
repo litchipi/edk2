@@ -23,6 +23,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/SerialPortLib.h>
+#include <Library/PcdLib.h>
 
 #include <IndustryStandard/ArmStdSmc.h>
 #include <IndustryStandard/ArmMmSvc.h>
@@ -165,19 +166,31 @@ EFI_STATUS
 GetSpmVersion (VOID)
 {
   EFI_STATUS   Status;
-  UINT16       SpmMajorVersion;
-  UINT16       SpmMinorVersion;
+  UINT16       CurSpmMajorVer;
+  UINT16       SpmMajorVer;
+  UINT16       CurSpmMinorVer;
+  UINT16       SpmMinorVer;
   UINT32       SpmVersion;
   ARM_SVC_ARGS SpmVersionArgs;
 
-  SpmVersionArgs.Arg0 = ARM_SVC_ID_SPM_VERSION_AARCH32;
+  if (FeaturePcdGet (PcdFfaEnable)) {
+    SpmVersionArgs.Arg0 = ARM_SVC_ID_FFA_VERSION_AARCH32;
+    SpmVersionArgs.Arg1 = SPM_MAJOR_VER << SPM_MAJOR_VER_SHIFT;
+    SpmVersionArgs.Arg1 |= SPM_MINOR_VER;
+    SpmMajorVer = SPM_MAJOR_VER_FFA;
+    SpmMinorVer = SPM_MINOR_VER_FFA;
+  } else {
+    SpmVersionArgs.Arg0 = ARM_SVC_ID_SPM_VERSION_AARCH32;
+    SpmMajorVer = SPM_MAJOR_VER;
+    SpmMinorVer = SPM_MINOR_VER;
+  }
 
   ArmCallSvc (&SpmVersionArgs);
 
   SpmVersion = SpmVersionArgs.Arg0;
 
-  SpmMajorVersion = ((SpmVersion & SPM_MAJOR_VER_MASK) >> SPM_MAJOR_VER_SHIFT);
-  SpmMinorVersion = ((SpmVersion & SPM_MINOR_VER_MASK) >> 0);
+  CurSpmMajorVer = ((SpmVersion & SPM_MAJOR_VER_MASK) >> SPM_MAJOR_VER_SHIFT);
+  CurSpmMinorVer = ((SpmVersion & SPM_MINOR_VER_MASK) >> 0);
 
   // Different major revision values indicate possibly incompatible functions.
   // For two revisions, A and B, for which the major revision values are
@@ -186,17 +199,17 @@ GetSpmVersion (VOID)
   // revision A must work in a compatible way with revision B.
   // However, it is possible for revision B to have a higher
   // function count than revision A.
-  if ((SpmMajorVersion == SPM_MAJOR_VER) &&
-      (SpmMinorVersion >= SPM_MINOR_VER))
+  if ((CurSpmMajorVer == SpmMajorVer) &&
+      (CurSpmMinorVer >= SpmMinorVer))
   {
     DEBUG ((DEBUG_INFO, "SPM Version: Major=0x%x, Minor=0x%x\n",
-           SpmMajorVersion, SpmMinorVersion));
+           CurSpmMajorVer, CurSpmMinorVer));
     Status = EFI_SUCCESS;
   }
   else
   {
     DEBUG ((DEBUG_INFO, "Incompatible SPM Versions.\n Current Version: Major=0x%x, Minor=0x%x.\n Expected: Major=0x%x, Minor>=0x%x.\n",
-            SpmMajorVersion, SpmMinorVersion, SPM_MAJOR_VER, SPM_MINOR_VER));
+            CurSpmMajorVer, CurSpmMinorVer, SpmMajorVer, SpmMinorVer));
     Status = EFI_UNSUPPORTED;
   }
 
