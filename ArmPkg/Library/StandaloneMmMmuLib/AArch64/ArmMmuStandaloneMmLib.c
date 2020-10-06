@@ -16,6 +16,7 @@
 #include <Library/ArmSvcLib.h>
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
+#include <Library/PcdLib.h>
 
 STATIC
 EFI_STATUS
@@ -25,19 +26,32 @@ GetMemoryPermissions (
   )
 {
   ARM_SVC_ARGS  GetMemoryPermissionsSvcArgs = {0};
+  BOOLEAN FfaEnabled;
 
-  GetMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES_AARCH64;
-  GetMemoryPermissionsSvcArgs.Arg1 = BaseAddress;
-  GetMemoryPermissionsSvcArgs.Arg2 = 0;
-  GetMemoryPermissionsSvcArgs.Arg3 = 0;
+  FfaEnabled = FeaturePcdGet (PcdFfaEnable);
+  if (FfaEnabled) {
+    GetMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_REQ_AARCH64;
+    GetMemoryPermissionsSvcArgs.Arg1 = 0x3;
+    GetMemoryPermissionsSvcArgs.Arg2 = 0;
+    GetMemoryPermissionsSvcArgs.Arg3 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES_AARCH64;
+    GetMemoryPermissionsSvcArgs.Arg4 = BaseAddress;
+  } else {
+    GetMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES_AARCH64;
+    GetMemoryPermissionsSvcArgs.Arg1 = BaseAddress;
+    GetMemoryPermissionsSvcArgs.Arg2 = 0;
+    GetMemoryPermissionsSvcArgs.Arg3 = 0;
+  }
 
   ArmCallSvc (&GetMemoryPermissionsSvcArgs);
-  if (GetMemoryPermissionsSvcArgs.Arg0 == ARM_SVC_SPM_RET_INVALID_PARAMS) {
+  if (GetMemoryPermissionsSvcArgs.Arg0 == ARM_SVC_SPM_RET_INVALID_PARAMS ||
+      GetMemoryPermissionsSvcArgs.Arg3 == ARM_SVC_SPM_RET_INVALID_PARAMS) {
     *MemoryAttributes = 0;
     return EFI_INVALID_PARAMETER;
   }
 
-  *MemoryAttributes = GetMemoryPermissionsSvcArgs.Arg0;
+  *MemoryAttributes = FfaEnabled ?
+    GetMemoryPermissionsSvcArgs.Arg3 : GetMemoryPermissionsSvcArgs.Arg0;
+
   return EFI_SUCCESS;
 }
 
