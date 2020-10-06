@@ -16,6 +16,7 @@
 #include <Library/ArmSvcLib.h>
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
+#include <Library/PcdLib.h>
 
 STATIC
 EFI_STATUS
@@ -24,20 +25,67 @@ GetMemoryPermissions (
   OUT UINT32                    *MemoryAttributes
   )
 {
+  INT32         Ret;
   ARM_SVC_ARGS  GetMemoryPermissionsSvcArgs = {0};
+  BOOLEAN       FfaEnabled;
 
-  GetMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES_AARCH64;
-  GetMemoryPermissionsSvcArgs.Arg1 = BaseAddress;
-  GetMemoryPermissionsSvcArgs.Arg2 = 0;
-  GetMemoryPermissionsSvcArgs.Arg3 = 0;
-
-  ArmCallSvc (&GetMemoryPermissionsSvcArgs);
-  if (GetMemoryPermissionsSvcArgs.Arg0 == ARM_SVC_SPM_RET_INVALID_PARAMS) {
-    *MemoryAttributes = 0;
-    return EFI_INVALID_PARAMETER;
+  FfaEnabled = FeaturePcdGet (PcdFfaEnable);
+  if (FfaEnabled) {
+    GetMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_REQ_AARCH64;
+    GetMemoryPermissionsSvcArgs.Arg1 = ARM_FFA_DESTINATION_ENDPOINT_ID;
+    GetMemoryPermissionsSvcArgs.Arg2 = 0;
+    GetMemoryPermissionsSvcArgs.Arg3 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES_AARCH64;
+    GetMemoryPermissionsSvcArgs.Arg4 = BaseAddress;
+  } else {
+    GetMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES_AARCH64;
+    GetMemoryPermissionsSvcArgs.Arg1 = BaseAddress;
+    GetMemoryPermissionsSvcArgs.Arg2 = 0;
+    GetMemoryPermissionsSvcArgs.Arg3 = 0;
   }
 
-  *MemoryAttributes = GetMemoryPermissionsSvcArgs.Arg0;
+  ArmCallSvc (&GetMemoryPermissionsSvcArgs);
+  if (FfaEnabled) {
+    Ret = GetMemoryPermissionsSvcArgs.Arg3;
+
+    switch (Ret) {
+    case ARM_FFA_SPM_RET_INVALID_PARAMETERS:
+      *MemoryAttributes = 0;
+      return EFI_INVALID_PARAMETER;
+
+    case ARM_FFA_SPM_RET_DENIED:
+      *MemoryAttributes = 0;
+      return EFI_NOT_READY;
+
+    case ARM_FFA_SPM_RET_NOT_SUPPORTED:
+      *MemoryAttributes = 0;
+      return EFI_UNSUPPORTED;
+
+    case ARM_FFA_SPM_RET_BUSY:
+      *MemoryAttributes = 0;
+      return EFI_NOT_READY;
+
+    case ARM_FFA_SPM_RET_ABORTED:
+      *MemoryAttributes = 0;
+      return EFI_ABORTED;
+    }
+
+    *MemoryAttributes = GetMemoryPermissionsSvcArgs.Arg3;
+  } else {
+    Ret = GetMemoryPermissionsSvcArgs.Arg0;
+
+    switch (Ret) {
+    case ARM_SVC_SPM_RET_INVALID_PARAMS:
+      *MemoryAttributes = 0;
+      return EFI_INVALID_PARAMETER;
+
+    case ARM_SVC_SPM_RET_NOT_SUPPORTED:
+      *MemoryAttributes = 0;
+      return EFI_UNSUPPORTED;
+    }
+
+    *MemoryAttributes = GetMemoryPermissionsSvcArgs.Arg0;
+  }
+
   return EFI_SUCCESS;
 }
 
