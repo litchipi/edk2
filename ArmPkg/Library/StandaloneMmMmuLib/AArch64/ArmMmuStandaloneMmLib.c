@@ -97,45 +97,71 @@ RequestMemoryPermissionChange (
   IN  UINTN                     Permissions
   )
 {
+  BOOLEAN       FfaEnabled;
   EFI_STATUS    Status;
   ARM_SVC_ARGS  ChangeMemoryPermissionsSvcArgs = {0};
 
-  ChangeMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_SP_SET_MEM_ATTRIBUTES_AARCH64;
-  ChangeMemoryPermissionsSvcArgs.Arg1 = BaseAddress;
-  ChangeMemoryPermissionsSvcArgs.Arg2 = EFI_SIZE_TO_PAGES(Length);
-  ChangeMemoryPermissionsSvcArgs.Arg3 = Permissions;
+  FfaEnabled = FeaturePcdGet (PcdFfaEnable);
+
+  if (FfaEnabled) {
+    ChangeMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_REQ_AARCH64;
+    ChangeMemoryPermissionsSvcArgs.Arg1 = ARM_FFA_DESTINATION_ENDPOINT_ID;
+    ChangeMemoryPermissionsSvcArgs.Arg2 = 0;
+    ChangeMemoryPermissionsSvcArgs.Arg3 = ARM_SVC_ID_SP_SET_MEM_ATTRIBUTES_AARCH64;
+    ChangeMemoryPermissionsSvcArgs.Arg4 = BaseAddress;
+    ChangeMemoryPermissionsSvcArgs.Arg5 = EFI_SIZE_TO_PAGES (Length);
+    ChangeMemoryPermissionsSvcArgs.Arg6 = Permissions;
+  } else {
+    ChangeMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_SP_SET_MEM_ATTRIBUTES_AARCH64;
+    ChangeMemoryPermissionsSvcArgs.Arg1 = BaseAddress;
+    ChangeMemoryPermissionsSvcArgs.Arg2 = EFI_SIZE_TO_PAGES (Length);
+    ChangeMemoryPermissionsSvcArgs.Arg3 = Permissions;
+  }
 
   ArmCallSvc (&ChangeMemoryPermissionsSvcArgs);
 
-  Status = ChangeMemoryPermissionsSvcArgs.Arg0;
+  if (FfaEnabled) {
+    Status = ChangeMemoryPermissionsSvcArgs.Arg3;
 
-  switch (Status) {
-  case ARM_SVC_SPM_RET_SUCCESS:
-    Status = EFI_SUCCESS;
-    break;
+    switch (Status) {
+    case ARM_FFA_SPM_RET_INVALID_PARAMETERS:
+      return EFI_INVALID_PARAMETER;
 
-  case ARM_SVC_SPM_RET_NOT_SUPPORTED:
-    Status = EFI_UNSUPPORTED;
-    break;
+    case ARM_FFA_SPM_RET_DENIED:
+      return EFI_NOT_READY;
 
-  case ARM_SVC_SPM_RET_INVALID_PARAMS:
-    Status = EFI_INVALID_PARAMETER;
-    break;
+    case ARM_FFA_SPM_RET_NOT_SUPPORTED:
+      return EFI_UNSUPPORTED;
 
-  case ARM_SVC_SPM_RET_DENIED:
-    Status = EFI_ACCESS_DENIED;
-    break;
+    case ARM_FFA_SPM_RET_BUSY:
+      return EFI_NOT_READY;
 
-  case ARM_SVC_SPM_RET_NO_MEMORY:
-    Status = EFI_BAD_BUFFER_SIZE;
-    break;
+    case ARM_FFA_SPM_RET_ABORTED:
+      return EFI_ABORTED;
 
-  default:
-    Status = EFI_ACCESS_DENIED;
-    ASSERT (0);
+    default:
+      return EFI_SUCCESS;
+    }
+  } else {
+    Status = ChangeMemoryPermissionsSvcArgs.Arg0;
+    switch (Status) {
+
+    case ARM_SVC_SPM_RET_NOT_SUPPORTED:
+      return EFI_UNSUPPORTED;
+
+    case ARM_SVC_SPM_RET_INVALID_PARAMS:
+      return EFI_INVALID_PARAMETER;
+
+    case ARM_SVC_SPM_RET_DENIED:
+      return EFI_ACCESS_DENIED;
+
+    case ARM_SVC_SPM_RET_NO_MEMORY:
+      return EFI_BAD_BUFFER_SIZE;
+
+    default:
+      return EFI_SUCCESS;
+    }
   }
-
-  return Status;
 }
 
 EFI_STATUS
