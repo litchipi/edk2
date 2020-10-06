@@ -112,6 +112,7 @@ DelegatedEventLoop (
   IN ARM_SVC_ARGS *EventCompleteSvcArgs
   )
 {
+  BOOLEAN FfaEnabled;
   EFI_STATUS Status;
   UINTN SvcStatus;
 
@@ -123,16 +124,32 @@ DelegatedEventLoop (
     DEBUG ((DEBUG_INFO, "X1 :  0x%x\n", (UINT32) EventCompleteSvcArgs->Arg1));
     DEBUG ((DEBUG_INFO, "X2 :  0x%x\n", (UINT32) EventCompleteSvcArgs->Arg2));
     DEBUG ((DEBUG_INFO, "X3 :  0x%x\n", (UINT32) EventCompleteSvcArgs->Arg3));
+    DEBUG ((DEBUG_INFO, "X4 :  0x%x\n", (UINT32) EventCompleteSvcArgs->Arg4));
+    DEBUG ((DEBUG_INFO, "X5 :  0x%x\n", (UINT32) EventCompleteSvcArgs->Arg5));
+    DEBUG ((DEBUG_INFO, "X6 :  0x%x\n", (UINT32) EventCompleteSvcArgs->Arg6));
+    DEBUG ((DEBUG_INFO, "X7 :  0x%x\n", (UINT32) EventCompleteSvcArgs->Arg7));
 
-    Status = CpuDriverEntryPoint (
-               EventCompleteSvcArgs->Arg0,
-               EventCompleteSvcArgs->Arg3,
-               EventCompleteSvcArgs->Arg1
-               );
-
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "Failed delegated event 0x%x, Status 0x%x\n",
-              EventCompleteSvcArgs->Arg0, Status));
+    FfaEnabled = FeaturePcdGet (PcdFfaEnable);
+    if (FfaEnabled) {
+      Status = CpuDriverEntryPoint (
+                 EventCompleteSvcArgs->Arg0,
+                 EventCompleteSvcArgs->Arg6,
+                 EventCompleteSvcArgs->Arg3
+                 );
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "Failed delegated event 0x%x, Status 0x%x\n",
+                EventCompleteSvcArgs->Arg3, Status));
+      }
+    } else {
+      Status = CpuDriverEntryPoint (
+                 EventCompleteSvcArgs->Arg0,
+                 EventCompleteSvcArgs->Arg3,
+                 EventCompleteSvcArgs->Arg1
+                 );
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "Failed delegated event 0x%x, Status 0x%x\n",
+                EventCompleteSvcArgs->Arg0, Status));
+      }
     }
 
     switch (Status) {
@@ -156,8 +173,16 @@ DelegatedEventLoop (
       break;
     }
 
-    EventCompleteSvcArgs->Arg0 = ARM_SVC_ID_SP_EVENT_COMPLETE_AARCH64;
-    EventCompleteSvcArgs->Arg1 = SvcStatus;
+    if (FfaEnabled) {
+      EventCompleteSvcArgs->Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_RESP_AARCH64;
+      EventCompleteSvcArgs->Arg1 = 0;
+      EventCompleteSvcArgs->Arg2 = 0;
+      EventCompleteSvcArgs->Arg3 = ARM_SVC_ID_SP_EVENT_COMPLETE_AARCH64;
+      EventCompleteSvcArgs->Arg4 = SvcStatus;
+    } else {
+      EventCompleteSvcArgs->Arg0 = ARM_SVC_ID_SP_EVENT_COMPLETE_AARCH64;
+      EventCompleteSvcArgs->Arg1 = SvcStatus;
+    }
   }
 }
 
@@ -214,6 +239,22 @@ GetSpmVersion (VOID)
   }
 
   return Status;
+}
+
+STATIC
+VOID
+InitArmSvcArgs (ARM_SVC_ARGS *InitMmFoundationSvcArgs, EFI_STATUS *Status)
+{
+  if (FeaturePcdGet (PcdFfaEnable)) {
+    InitMmFoundationSvcArgs->Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_RESP_AARCH64;
+    InitMmFoundationSvcArgs->Arg1 = 0;
+    InitMmFoundationSvcArgs->Arg2 = 0;
+    InitMmFoundationSvcArgs->Arg3 = ARM_SVC_ID_SP_EVENT_COMPLETE_AARCH64;
+    InitMmFoundationSvcArgs->Arg4 = *Status;
+  } else {
+    InitMmFoundationSvcArgs->Arg0 = ARM_SVC_ID_SP_EVENT_COMPLETE_AARCH64;
+    InitMmFoundationSvcArgs->Arg1 = *Status;
+  }
 }
 
 /**
@@ -329,7 +370,6 @@ _ModuleEntryPoint (
 
 finish:
   ZeroMem (&InitMmFoundationSvcArgs, sizeof(InitMmFoundationSvcArgs));
-  InitMmFoundationSvcArgs.Arg0 = ARM_SVC_ID_SP_EVENT_COMPLETE_AARCH64;
-  InitMmFoundationSvcArgs.Arg1 = Status;
+  InitArmSvcArgs(&InitMmFoundationSvcArgs, &Status);
   DelegatedEventLoop (&InitMmFoundationSvcArgs);
 }
