@@ -2,6 +2,7 @@
 
   Copyright (c) 2016 HP Development Company, L.P.
   Copyright (c) 2016 - 2018, ARM Limited. All rights reserved.
+  Copyright (c) 2020, Linaro Limited
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -26,6 +27,13 @@
 #include <IndustryStandard/ArmStdSmc.h>
 
 #include "StandaloneMmCpu.h"
+
+#ifdef MDE_CPU_AARCH64
+#define ARM_SMC_ID_MM_COMMUNICATE          ARM_SMC_ID_MM_COMMUNICATE_AARCH64
+#endif
+#ifdef MDE_CPU_ARM
+#define ARM_SMC_ID_MM_COMMUNICATE          ARM_SMC_ID_MM_COMMUNICATE_AARCH32
+#endif
 
 EFI_STATUS
 EFIAPI
@@ -79,8 +87,8 @@ PiMmStandaloneArmTfCpuDriverEntry (
   // receipt of a synchronous MM request. Use the Event ID to distinguish
   // between synchronous and asynchronous events.
   //
-  if ((ARM_SMC_ID_MM_COMMUNICATE_AARCH64 != EventId) &&
-      (ARM_SVC_ID_FFA_MSG_SEND_DIRECT_REQ_AARCH64 != EventId)) {
+  if ((ARM_SMC_ID_MM_COMMUNICATE != EventId) &&
+      (ARM_SVC_ID_FFA_MSG_SEND_DIRECT_REQ != EventId)) {
     DEBUG ((DEBUG_INFO, "UnRecognized Event - 0x%x\n", EventId));
     return EFI_INVALID_PARAMETER;
   }

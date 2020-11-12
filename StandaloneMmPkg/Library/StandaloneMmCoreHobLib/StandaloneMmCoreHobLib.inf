@@ -22,12 +22,15 @@
   LIBRARY_CLASS                  = HobLib|MM_CORE_STANDALONE
 
 #
-#  VALID_ARCHITECTURES           = AARCH64
+#  VALID_ARCHITECTURES           = AARCH64|ARM
 #
 [Sources.Common]
   StandaloneMmCoreHobLib.c
 
 [Sources.AARCH64]
+  AArch64/StandaloneMmCoreHobLibInternal.c
+
+[Sources.ARM]
   AArch64/StandaloneMmCoreHobLibInternal.c
 
 [Packages]
