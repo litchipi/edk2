@@ -10,7 +10,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include <PiMm.h>
 
-#include <Library/AArch64/StandaloneMmCoreEntryPoint.h>
+#include <Library/Arm/StandaloneMmCoreEntryPoint.h>
 
 #include <PiPei.h>
 #include <Guid/MmramMemoryReserve.h>
@@ -174,13 +174,13 @@ DelegatedEventLoop (
     }
 
     if (FfaEnabled) {
-      EventCompleteSvcArgs->Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_RESP_AARCH64;
+      EventCompleteSvcArgs->Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_RESP;
       EventCompleteSvcArgs->Arg1 = 0;
       EventCompleteSvcArgs->Arg2 = 0;
-      EventCompleteSvcArgs->Arg3 = ARM_SVC_ID_SP_EVENT_COMPLETE_AARCH64;
+      EventCompleteSvcArgs->Arg3 = ARM_SVC_ID_SP_EVENT_COMPLETE;
       EventCompleteSvcArgs->Arg4 = SvcStatus;
     } else {
-      EventCompleteSvcArgs->Arg0 = ARM_SVC_ID_SP_EVENT_COMPLETE_AARCH64;
+      EventCompleteSvcArgs->Arg0 = ARM_SVC_ID_SP_EVENT_COMPLETE;
       EventCompleteSvcArgs->Arg1 = SvcStatus;
     }
   }
@@ -246,13 +246,13 @@ VOID
 InitArmSvcArgs (ARM_SVC_ARGS *InitMmFoundationSvcArgs, EFI_STATUS *Status)
 {
   if (FeaturePcdGet (PcdFfaEnable)) {
-    InitMmFoundationSvcArgs->Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_RESP_AARCH64;
+    InitMmFoundationSvcArgs->Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_RESP;
     InitMmFoundationSvcArgs->Arg1 = 0;
     InitMmFoundationSvcArgs->Arg2 = 0;
-    InitMmFoundationSvcArgs->Arg3 = ARM_SVC_ID_SP_EVENT_COMPLETE_AARCH64;
+    InitMmFoundationSvcArgs->Arg3 = ARM_SVC_ID_SP_EVENT_COMPLETE;
     InitMmFoundationSvcArgs->Arg4 = *Status;
   } else {
-    InitMmFoundationSvcArgs->Arg0 = ARM_SVC_ID_SP_EVENT_COMPLETE_AARCH64;
+    InitMmFoundationSvcArgs->Arg0 = ARM_SVC_ID_SP_EVENT_COMPLETE;
     InitMmFoundationSvcArgs->Arg1 = *Status;
   }
 }
@@ -366,7 +366,7 @@ _ModuleEntryPoint (
   //
   ProcessModuleEntryPointList (HobStart);
 
-  DEBUG ((DEBUG_INFO, "Shared Cpu Driver EP 0x%lx\n", (UINT64) CpuDriverEntryPoint));
+  DEBUG ((DEBUG_INFO, "Shared Cpu Driver EP %p\n", (void *) CpuDriverEntryPoint));
 
 finish:
   ZeroMem (&InitMmFoundationSvcArgs, sizeof(InitMmFoundationSvcArgs));

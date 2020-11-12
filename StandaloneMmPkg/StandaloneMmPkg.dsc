@@ -19,7 +19,7 @@
   PLATFORM_VERSION               = 1.0
   DSC_SPECIFICATION              = 0x00010011
   OUTPUT_DIRECTORY               = Build/StandaloneMm
-  SUPPORTED_ARCHITECTURES        = AARCH64
+  SUPPORTED_ARCHITECTURES        = AARCH64|ARM
   BUILD_TARGETS                  = DEBUG|RELEASE
   SKUID_IDENTIFIER               = DEFAULT
 
@@ -54,7 +54,7 @@
   StandaloneMmCoreEntryPoint|StandaloneMmPkg/Library/StandaloneMmCoreEntryPoint/StandaloneMmCoreEntryPoint.inf
   StandaloneMmDriverEntryPoint|MdePkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
 
-[LibraryClasses.AARCH64]
+[LibraryClasses.AARCH64, LibraryClasses.ARM]
   ArmLib|ArmPkg/Library/ArmLib/ArmBaseLib.inf
   StandaloneMmMmuLib|ArmPkg/Library/StandaloneMmMmuLib/ArmMmuStandaloneMmLib.inf
   ArmSvcLib|ArmPkg/Library/ArmSvcLib/ArmSvcLib.inf
@@ -99,9 +99,7 @@
   # MM Core
   #
   StandaloneMmPkg/Core/StandaloneMmCore.inf
-
-[Components.AARCH64]
-  StandaloneMmPkg/Drivers/StandaloneMmCpu/AArch64/StandaloneMmCpu.inf
+  StandaloneMmPkg/Drivers/StandaloneMmCpu/StandaloneMmCpu.inf
 
 ###################################################################################################
 #
@@ -112,6 +110,6 @@
 #                        module style (EDK or EDKII) specified in [Components] section.
 #
 ###################################################################################################
-[BuildOptions.AARCH64]
+[BuildOptions]
 GCC:*_*_*_DLINK_FLAGS = -z common-page-size=0x1000 -march=armv8-a+nofp -mstrict-align
 GCC:*_*_*_CC_FLAGS = -mstrict-align
