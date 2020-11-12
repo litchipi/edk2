@@ -35,6 +35,9 @@
 [Sources.AARCH64]
   AArch64/StandaloneMmMemLibInternal.c
 
+[Sources.ARM]
+  AArch32/StandaloneMmMemLibInternal.c
+
 [Packages]
   MdePkg/MdePkg.dec
   StandaloneMmPkg/StandaloneMmPkg.dec

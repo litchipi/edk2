@@ -26,12 +26,17 @@
   AArch64/SetPermissions.c
   AArch64/CreateHobList.c
 
+[Sources.ARM]
+  AArch32/StandaloneMmCoreEntryPoint.c
+  AArch32/SetPermissions.c
+  AArch32/CreateHobList.c
+
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   StandaloneMmPkg/StandaloneMmPkg.dec
 
-[Packages.AARCH64]
+[Packages.ARM, Packages.AARCH64]
   ArmPkg/ArmPkg.dec
   ArmPlatformPkg/ArmPlatformPkg.dec
 
