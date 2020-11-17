@@ -2,6 +2,7 @@
   File managing the MMU for ARMv8 architecture in S-EL0
 
   Copyright (c) 2017 - 2021, Arm Limited. All rights reserved.<BR>
+  Copyright (c) 2021, Linaro Limited
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
   @par Reference(s):
@@ -62,7 +63,7 @@ SendMemoryPermissionRequest (
     // for other Direct Request calls which are not atomic
     // We therefore check only for Direct Response by the
     // callee.
-    if (SvcArgs->Arg0 == ARM_SVC_ID_FFA_MSG_SEND_DIRECT_RESP_AARCH64) {
+    if (SvcArgs->Arg0 == ARM_SVC_ID_FFA_MSG_SEND_DIRECT_RESP) {
       // A Direct Response means FF-A success
       // Now check the payload for errors
       // The callee sends back the return value
@@ -103,8 +104,8 @@ SendMemoryPermissionRequest (
   // Check error response from Callee.
   if (*RetVal & BIT31) {
     // Bit 31 set means there is an error retured
-    // See [1], Section 13.5.5.1 MM_SP_MEMORY_ATTRIBUTES_GET_AARCH64 and
-    // Section 13.5.5.2 MM_SP_MEMORY_ATTRIBUTES_SET_AARCH64.
+    // See [1], Section 13.5.5.1 MM_SP_MEMORY_ATTRIBUTES_GET and
+    // Section 13.5.5.2 MM_SP_MEMORY_ATTRIBUTES_SET.
     switch (*RetVal) {
       case ARM_SVC_SPM_RET_NOT_SUPPORTED:
         return EFI_UNSUPPORTED;
@@ -160,17 +161,17 @@ GetMemoryPermissions (
   }
 
   // Prepare the message parameters.
-  // See [1], Section 13.5.5.1 MM_SP_MEMORY_ATTRIBUTES_GET_AARCH64.
+  // See [1], Section 13.5.5.1 MM_SP_MEMORY_ATTRIBUTES_GET.
   ZeroMem (&SvcArgs, sizeof (ARM_SVC_ARGS));
   if (FeaturePcdGet (PcdFfaEnable)) {
     // See [2], Section 10.2 FFA_MSG_SEND_DIRECT_REQ.
-    SvcArgs.Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_REQ_AARCH64;
+    SvcArgs.Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_REQ;
     SvcArgs.Arg1 = ARM_FFA_DESTINATION_ENDPOINT_ID;
     SvcArgs.Arg2 = 0;
-    SvcArgs.Arg3 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES_AARCH64;
+    SvcArgs.Arg3 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES;
     SvcArgs.Arg4 = BaseAddress;
   } else {
-    SvcArgs.Arg0 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES_AARCH64;
+    SvcArgs.Arg0 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES;
     SvcArgs.Arg1 = BaseAddress;
     SvcArgs.Arg2 = 0;
     SvcArgs.Arg3 = 0;
@@ -215,19 +216,19 @@ RequestMemoryPermissionChange (
   ARM_SVC_ARGS  SvcArgs;
 
   // Prepare the message parameters.
-  // See [1], Section 13.5.5.2 MM_SP_MEMORY_ATTRIBUTES_SET_AARCH64.
+  // See [1], Section 13.5.5.2 MM_SP_MEMORY_ATTRIBUTES_SET.
   ZeroMem (&SvcArgs, sizeof (ARM_SVC_ARGS));
   if (FeaturePcdGet (PcdFfaEnable)) {
     // See [2], Section 10.2 FFA_MSG_SEND_DIRECT_REQ.
-    SvcArgs.Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_REQ_AARCH64;
+    SvcArgs.Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_REQ;
     SvcArgs.Arg1 = ARM_FFA_DESTINATION_ENDPOINT_ID;
     SvcArgs.Arg2 = 0;
-    SvcArgs.Arg3 = ARM_SVC_ID_SP_SET_MEM_ATTRIBUTES_AARCH64;
+    SvcArgs.Arg3 = ARM_SVC_ID_SP_SET_MEM_ATTRIBUTES;
     SvcArgs.Arg4 = BaseAddress;
     SvcArgs.Arg5 = EFI_SIZE_TO_PAGES (Length);
     SvcArgs.Arg6 = Permissions;
   } else {
-    SvcArgs.Arg0 = ARM_SVC_ID_SP_SET_MEM_ATTRIBUTES_AARCH64;
+    SvcArgs.Arg0 = ARM_SVC_ID_SP_SET_MEM_ATTRIBUTES;
     SvcArgs.Arg1 = BaseAddress;
     SvcArgs.Arg2 = EFI_SIZE_TO_PAGES (Length);
     SvcArgs.Arg3 = Permissions;
