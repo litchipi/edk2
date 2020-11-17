@@ -146,7 +146,7 @@
   ArmPkg/Drivers/ArmCrashDumpDxe/ArmCrashDumpDxe.inf
   ArmPkg/Drivers/ArmScmiDxe/ArmScmiDxe.inf
 
-[Components.AARCH64]
+[Components.ARM, Components.AARCH64]
   ArmPkg/Drivers/MmCommunicationDxe/MmCommunication.inf
   ArmPkg/Library/ArmMmuLib/ArmMmuPeiLib.inf
   ArmPkg/Library/StandaloneMmMmuLib/ArmMmuStandaloneMmLib.inf
