@@ -2,6 +2,7 @@
 *  File managing the MMU for ARMv8 architecture in S-EL0
 *
 *  Copyright (c) 2017 - 2021, Arm Limited. All rights reserved.<BR>
+*  Copyright (c) 2021, Linaro Limited
 *
 *  SPDX-License-Identifier: BSD-2-Clause-Patent
 *
@@ -34,13 +35,13 @@ GetMemoryPermissions (
 
   FfaEnabled = FeaturePcdGet (PcdFfaEnable);
   if (FfaEnabled) {
-    GetMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_REQ_AARCH64;
+    GetMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_REQ;
     GetMemoryPermissionsSvcArgs.Arg1 = ARM_FFA_DESTINATION_ENDPOINT_ID;
     GetMemoryPermissionsSvcArgs.Arg2 = 0;
-    GetMemoryPermissionsSvcArgs.Arg3 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES_AARCH64;
+    GetMemoryPermissionsSvcArgs.Arg3 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES;
     GetMemoryPermissionsSvcArgs.Arg4 = BaseAddress;
   } else {
-    GetMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES_AARCH64;
+    GetMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES;
     GetMemoryPermissionsSvcArgs.Arg1 = BaseAddress;
     GetMemoryPermissionsSvcArgs.Arg2 = 0;
     GetMemoryPermissionsSvcArgs.Arg3 = 0;
@@ -58,7 +59,7 @@ GetMemoryPermissions (
     // We therefore check only for Direct Response by the
     // callee.
     if (GetMemoryPermissionsSvcArgs.Arg0 !=
-        ARM_SVC_ID_FFA_MSG_SEND_DIRECT_RESP_AARCH64) {
+        ARM_SVC_ID_FFA_MSG_SEND_DIRECT_RESP) {
       // If Arg0 is not a Direct Response, that means we
       // have an FF-A error. We need to check Arg2 for the
       // FF-A error code.
@@ -81,7 +82,7 @@ GetMemoryPermissions (
         return EFI_ABORTED;
       }
     } else if (GetMemoryPermissionsSvcArgs.Arg0 ==
-               ARM_SVC_ID_FFA_MSG_SEND_DIRECT_RESP_AARCH64) {
+               ARM_SVC_ID_FFA_MSG_SEND_DIRECT_RESP) {
       // A Direct Response means FF-A success
       // Now check the payload for errors
       // The callee sends back the return value
@@ -125,15 +126,15 @@ RequestMemoryPermissionChange (
   FfaEnabled = FeaturePcdGet (PcdFfaEnable);
 
   if (FfaEnabled) {
-    ChangeMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_REQ_AARCH64;
+    ChangeMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_REQ;
     ChangeMemoryPermissionsSvcArgs.Arg1 = ARM_FFA_DESTINATION_ENDPOINT_ID;
     ChangeMemoryPermissionsSvcArgs.Arg2 = 0;
-    ChangeMemoryPermissionsSvcArgs.Arg3 = ARM_SVC_ID_SP_SET_MEM_ATTRIBUTES_AARCH64;
+    ChangeMemoryPermissionsSvcArgs.Arg3 = ARM_SVC_ID_SP_SET_MEM_ATTRIBUTES;
     ChangeMemoryPermissionsSvcArgs.Arg4 = BaseAddress;
     ChangeMemoryPermissionsSvcArgs.Arg5 = EFI_SIZE_TO_PAGES (Length);
     ChangeMemoryPermissionsSvcArgs.Arg6 = Permissions;
   } else {
-    ChangeMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_SP_SET_MEM_ATTRIBUTES_AARCH64;
+    ChangeMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_SP_SET_MEM_ATTRIBUTES;
     ChangeMemoryPermissionsSvcArgs.Arg1 = BaseAddress;
     ChangeMemoryPermissionsSvcArgs.Arg2 = EFI_SIZE_TO_PAGES (Length);
     ChangeMemoryPermissionsSvcArgs.Arg3 = Permissions;
@@ -151,7 +152,7 @@ RequestMemoryPermissionChange (
     // We therefore check only for Direct Response by the
     // callee.
     if (ChangeMemoryPermissionsSvcArgs.Arg0 !=
-        ARM_SVC_ID_FFA_MSG_SEND_DIRECT_RESP_AARCH64) {
+        ARM_SVC_ID_FFA_MSG_SEND_DIRECT_RESP) {
       // If Arg0 is not a Direct Response, that means we
       // have an FF-A error. We need to check Arg2 for the
       // FF-A error code.
@@ -173,7 +174,7 @@ RequestMemoryPermissionChange (
         return EFI_ABORTED;
       }
     } else if (ChangeMemoryPermissionsSvcArgs.Arg0 ==
-               ARM_SVC_ID_FFA_MSG_SEND_DIRECT_RESP_AARCH64) {
+               ARM_SVC_ID_FFA_MSG_SEND_DIRECT_RESP) {
       // A Direct Response means FF-A success
       // Now check the payload for errors
       // The callee sends back the return value
