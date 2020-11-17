@@ -2,6 +2,7 @@
 *  File managing the MMU for ARMv8 architecture in S-EL0
 *
 *  Copyright (c) 2017 - 2018, ARM Limited. All rights reserved.
+*  Copyright (c) 2020, Linaro Limited
 *
 *  SPDX-License-Identifier: BSD-2-Clause-Patent
 *
@@ -30,13 +31,13 @@ GetMemoryPermissions (
 
   FfaEnabled = FeaturePcdGet (PcdFfaEnable);
   if (FfaEnabled) {
-    GetMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_REQ_AARCH64;
+    GetMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_REQ;
     GetMemoryPermissionsSvcArgs.Arg1 = 0x3;
     GetMemoryPermissionsSvcArgs.Arg2 = 0;
-    GetMemoryPermissionsSvcArgs.Arg3 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES_AARCH64;
+    GetMemoryPermissionsSvcArgs.Arg3 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES;
     GetMemoryPermissionsSvcArgs.Arg4 = BaseAddress;
   } else {
-    GetMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES_AARCH64;
+    GetMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_SP_GET_MEM_ATTRIBUTES;
     GetMemoryPermissionsSvcArgs.Arg1 = BaseAddress;
     GetMemoryPermissionsSvcArgs.Arg2 = 0;
     GetMemoryPermissionsSvcArgs.Arg3 = 0;
@@ -70,15 +71,15 @@ RequestMemoryPermissionChange (
   FfaEnabled = FeaturePcdGet (PcdFfaEnable);
 
   if (FfaEnabled) {
-    ChangeMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_REQ_AARCH64;
+    ChangeMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_FFA_MSG_SEND_DIRECT_REQ;
     ChangeMemoryPermissionsSvcArgs.Arg1 = 0x3;
     ChangeMemoryPermissionsSvcArgs.Arg2 = 0;
-    ChangeMemoryPermissionsSvcArgs.Arg3 = ARM_SVC_ID_SP_SET_MEM_ATTRIBUTES_AARCH64;
+    ChangeMemoryPermissionsSvcArgs.Arg3 = ARM_SVC_ID_SP_SET_MEM_ATTRIBUTES;
     ChangeMemoryPermissionsSvcArgs.Arg4 = BaseAddress;
     ChangeMemoryPermissionsSvcArgs.Arg5 = EFI_SIZE_TO_PAGES(Length);
     ChangeMemoryPermissionsSvcArgs.Arg6 = Permissions;
   } else {
-    ChangeMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_SP_SET_MEM_ATTRIBUTES_AARCH64;
+    ChangeMemoryPermissionsSvcArgs.Arg0 = ARM_SVC_ID_SP_SET_MEM_ATTRIBUTES;
     ChangeMemoryPermissionsSvcArgs.Arg1 = BaseAddress;
     ChangeMemoryPermissionsSvcArgs.Arg2 = EFI_SIZE_TO_PAGES(Length);
     ChangeMemoryPermissionsSvcArgs.Arg3 = Permissions;
