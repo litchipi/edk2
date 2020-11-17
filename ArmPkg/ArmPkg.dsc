@@ -151,7 +151,7 @@
   ArmPkg/Universal/Smbios/ProcessorSubClassDxe/ProcessorSubClassDxe.inf
   ArmPkg/Universal/Smbios/SmbiosMiscDxe/SmbiosMiscDxe.inf
 
-[Components.AARCH64]
+[Components.AARCH64, Components.ARM]
   ArmPkg/Drivers/MmCommunicationDxe/MmCommunication.inf
   ArmPkg/Library/ArmMmuLib/ArmMmuPeiLib.inf
   ArmPkg/Library/StandaloneMmMmuLib/ArmMmuStandaloneMmLib.inf
